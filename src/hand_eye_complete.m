@@ -10,7 +10,7 @@ status = system(cmd)
 %% Calibraçao Intrinsics
 
 % Carrega as imagens de calibração de uma pasta específica
-imageFolder = './Intrinsics_1000/*.png';
+imageFolder = './Intrinsics_v2/*.png';
 images = imageDatastore(imageFolder);
 
 % Detecta os pontos das bordas do tabuleiro de xadrez nas imagens
@@ -104,7 +104,7 @@ fprintf('Final error: %.4f pixels\n', bestError);
 fprintf('Images used: %s\n', mat2str(results(bestIdx).ImagesUsed));
 
 % Salva os melhores parâmetros encontrados e todos os resultados das calibrações
-save('./data/bestCameraParams.mat', 'bestParams');
+save('./data/bestCameraParams_v2.mat', 'bestParams');
 
 % Exibe os erros de reprojeção para a melhor combinação de parâmetros
 figure;
@@ -139,11 +139,11 @@ end
 
 %% Extrinsics
 
-ld = load("data/bestCameraParams.mat").bestParams;
+ld = load("data/bestCameraParams_v2.mat").bestParams;
 intrinsics = ld.Intrinsics;
 
 numPoses = 30;
-imds = imageDatastore("./Extrinsics_1000/");
+imds = imageDatastore("./Extrinsics_v2/");
 montage(imds)
 
 squareSize = 0.015; % Measured in meters
@@ -163,7 +163,7 @@ for i = 1:numPoses
     camExtrinsics(i) = estimateExtrinsics(imagePoints,worldPoints,intrinsics);
 end
 
-jointPositionsDeg = load("jntconfig_rad.mat").jntconfig_rad
+jointPositionsDeg = load("jnt_config_rad.mat").jnt_config
 
 robotModel = loadrobot("universalUR16e");
 robotModel.DataFormat = "column";
@@ -177,82 +177,85 @@ for i = 1:numPoses
 end
 
 config = "moving-camera";
-
-% Uncomment for Tsai Lenz Methodology
-cameraToEndEffectorTform = estimateCameraRobotTransform(camExtrinsics,endEffectorToBaseTform,config)
-
-% Uncomment for Park Martin Methodology
-%cameraToEndEffectorTform = estimateCameraRobotTransform_parkMartin(camExtrinsics,endEffectorToBaseTform,config)
-
-% Uncomment for XC2 Methodology
-%cameraToEndEffectorTform = estimateCameraRobotTransform_XC2(camExtrinsics, endEffectorToBaseTform, config)
-
-
+% cameraToEndEffectorTform = estimateCameraRobotTransform(camExtrinsics,endEffectorToBaseTform,config)
 % cameraToFalngeTform = estimateCameraRobotTransform(camExtrinsics, flangeToBaseTform, config)
 
-% %% teste
+% park
+% cameraToEndEffectorTform_park = estimateCameraRobotTransform_park(camExtrinsics,endEffectorToBaseTform,config)
+
+%XC2
+cameraToEndEffectorTform_xc2 = estimateCameraRobotTransform_xc2(camExtrinsics,endEffectorToBaseTform,config)
+
+%% teste
 % 
-% testImage = imread("images_calibration_robot2/april_teste2.png");
-% imshow(testImage)
-% undistortedTestImage = undistortImage(testImage,ld);
-% imshow(undistortedTestImage)
+testImage = imread("apriltag1.png");
+figure;
+imshow(testImage)
+figure;
+undistortedTestImage = undistortImage(testImage,ld);
+imshow(undistortedTestImage)
+figure;
 % 
-% % testPose = [73.1 -65.60 59.09 -83.41 -89.67 -16.86]'
+% testPose = [73.1 -65.60 59.09 -83.41 -89.67 -16.86]'
 % % testPose = [74.64 -72.22 75.51 -93.21 -89.66 -15.29]'
 % % testPose = [77.56 -70.37 40.89 -60.44 -89.71 -12.49]'
 % % testPose = [67.50 -87.91 41.83 -42.99 -89.54 -22.57]'
-% testPose = [67.59 -80.56 31.92 -41.27 -89.76 -22.50]'
+testPose = [90.61 -54.65 61.84 -97.14 -89.77 -2.92]'
 % 
-% testPoseRad = deg2rad(testPose);
-% endEffectorToBaseTformTest = getTransform(robotModel,testPoseRad,"tool0");
+testPoseRad = deg2rad(testPose);
+endEffectorToBaseTformTest = getTransform(robotModel,testPoseRad,"tool0");
 % 
-% % Specify the tag family and tag size of the AprilTag.
-% tagFamily = 'tag36h11';
-% tagSize = .049; % AprilTag size in meters
+% Specify the tag family and tag size of the AprilTag.
+tagFamily = 'tag36h11';
+tagSize = .049; % AprilTag size in meters
 % 
-% % Detect AprilTag in test image.
-% [~,~,aprilTagToCameraTform] = readAprilTag(undistortedTestImage,tagFamily,intrinsics,tagSize);
+% Detect AprilTag in test image.
+[~,~,aprilTagToCameraTform] = readAprilTag(undistortedTestImage,tagFamily,intrinsics,tagSize);
+aprilTagToCameraTform   
 % 
-% % Find the transformation from the camera to the robot base.
-% cameraToBaseTestTform = rigidtform3d(endEffectorToBaseTformTest * cameraToEndEffectorTform.A);
+% Find the transformation from the camera to the robot base.
+cameraToBaseTestTform = rigidtform3d(endEffectorToBaseTformTest * cameraToEndEffectorTform.A);
 % 
-% % Find the transformation from the April Tag to the robot base.
-% tagToBaseTestTform = cameraToBaseTestTform.A * aprilTagToCameraTform.A;
-% cubePosition = tagToBaseTestTform(1:3,4) * 1000
+% Find the transformation from the April Tag to the robot base.
+tagToBaseTestTform = cameraToBaseTestTform.A * aprilTagToCameraTform.A;
+cubePosition = tagToBaseTestTform(1:3,4) * 1000;
+cubePosition(1) = cubePosition(1) * (-1);
+cubePosition(2) = cubePosition(2) * (-1);
+cubePosition
 % 
-% show(robotModel,testPoseRad);
-% hold on
+show(robotModel,testPoseRad);
+hold on
 % 
 % % Show the estimated positions and orientations of the camera and cube.
-% plotCamera(AbsolutePose = cameraToBaseTestTform, Opacity=0, size=0.02)
-% scatter3(cubePosition(1), cubePosition(2), cubePosition(3), 300, 'square', 'filled')
-% cubeRotationQuaternion = rotm2quat(tagToBaseTestTform(1:3,1:3));
-% plotTransforms(cubePosition', cubeRotationQuaternion)
-% title("Robot Arm and Estimated Position of AprilTag Cube")
-% xlim([-.3,.9])
-% ylim([-.5, .5])
-% zlim([-.2,.9])
-% 
+plotCamera(AbsolutePose = cameraToBaseTestTform, Opacity=0, size=0.02)
+scatter3(cubePosition(1), cubePosition(2), cubePosition(3), 300, 'square', 'filled')
+cubeRotationQuaternion = rotm2quat(tagToBaseTestTform(1:3,1:3));
+plotTransforms(cubePosition', cubeRotationQuaternion)
+title("Robot Arm and Estimated Position of AprilTag Cube")
+xlim([-.3,.9])
+ylim([-.5, .5])
+zlim([-.2,.9])
+
 %
-centroid = [538.66 320.33]; % pixel detectado pela YOLO (1x2)
-
-% Corrigindo o pixel
-undCentroid = undistortPoints(centroid, intrinsics);
-
-u_corr = undCentroid(1);
-v_corr = undCentroid(2);
-pixel = [u_corr; v_corr; 1];
-XYZ_Cam = (614.2-137)/1000 * (intrinsics.K \ pixel);
-pose_foto = [71.43 -70.08 54.03 -73.90 -89.77 -17.27]';
-testPoseRad = deg2rad(pose_foto);
-endEffectorToBaseTformTest = getTransform(robotModel,testPoseRad,"tool0");
-
-cameraToBaseTestTform = rigidtform3d(endEffectorToBaseTformTest * cameraToEndEffectorTform.A);
-
-% Convert to robot base frame
-XYZ_Base = transformPointsForward(cameraToBaseTestTform, XYZ_Cam')*1000
-% XYZ_Base(1) = XYZ_Base(1)+1.33;
-% XYZ_Base(2) = XYZ_Base(2)-2.45;
-XYZ_Base(1) = XYZ_Base(1)+1.7;
-XYZ_Base(2) = XYZ_Base(2);
-XYZ_Base
+% centroid = [538.66 320.33]; % pixel detectado pela YOLO (1x2)
+% 
+% % Corrigindo o pixel
+% undCentroid = undistortPoints(centroid, intrinsics);
+% 
+% u_corr = undCentroid(1);
+% v_corr = undCentroid(2);
+% pixel = [u_corr; v_corr; 1];
+% XYZ_Cam = (614.2-137)/1000 * (intrinsics.K \ pixel);
+% pose_foto = [71.43 -70.08 54.03 -73.90 -89.77 -17.27]';
+% testPoseRad = deg2rad(pose_foto);
+% endEffectorToBaseTformTest = getTransform(robotModel,testPoseRad,"tool0");
+% 
+% cameraToBaseTestTform = rigidtform3d(endEffectorToBaseTformTest * cameraToEndEffectorTform.A);
+% 
+% % Convert to robot base frame
+% XYZ_Base = transformPointsForward(cameraToBaseTestTform, XYZ_Cam')*1000
+% % XYZ_Base(1) = XYZ_Base(1)+1.33;
+% % XYZ_Base(2) = XYZ_Base(2)-2.45;
+% XYZ_Base(1) = XYZ_Base(1)+1.7;
+% XYZ_Base(2) = XYZ_Base(2);
+% XYZ_Base

@@ -1,4 +1,4 @@
-function cameraPose = estimateCameraRobotTransform_parkMartin(camExtrinsics, gripperPose, configuration)
+function cameraPose = estimateCameraRobotTransform_park(camExtrinsics, gripperPose, configuration)
 % estimateCameraRobotTransform_parkMartin
 % Drop-in replacement for MATLAB's estimateCameraRobotTransform, but using
 % Park–Martin hand-eye calibration.

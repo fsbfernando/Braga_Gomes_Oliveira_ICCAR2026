@@ -1,4 +1,4 @@
-function cameraPose = estimateCameraRobotTransform_XC2(camExtrinsics,gripperPose,configuration)
+function cameraPose = estimateCameraRobotTransform_xc2(camExtrinsics,gripperPose,configuration)
 % estimateCameraRobotTransform_XC2  Hand-eye calibration using XC2 cost (Eq. 6)
 %
 % Signature, inputs, and output are intentionally identical to
@@ -78,6 +78,7 @@ function cameraPose = iCalibrateHandEye_XC2(camExtrinsics,gripperPose,configurat
     x0 = iInitialGuessFromTsai(camExtrinsics,gripperPose,configuration); % 7x1 [qw qx qy qz tx ty tz]
 
     % Solve nonlinear least squares: minimize sum || log( inv(X*Bij*invX)*Aij ) ||^2
+    % Levenberg-Marquardt
     if exist('lsqnonlin','file') == 2
         opts = optimoptions('lsqnonlin',...
             'Display','off',...
