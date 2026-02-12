@@ -49,7 +49,7 @@ df <- df %>%
     err_x = Est_X - Real_X,
     err_y = Est_Y - Real_Y,
     err_z = Est_Z - Real_Z,
-    err_eucl = sqrt(err_x^2 + err_y^2)
+    err_eucl = sqrt(err_x^2 + err_y^2 + err_z^2)
   )
 
 # Remove outliers by Block x AprilTag
@@ -294,4 +294,5 @@ writeLines(report_all, con = file.path(outdir, "relatorio_resumido.txt"))
 cat("\nOutputs saved in:", outdir, "\n")
 cat("PNG: 4 boxplots + 2 ANOVA tables\n")
 cat("TXT: relatorio_resumido.txt\n")
+
 
