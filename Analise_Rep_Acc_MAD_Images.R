@@ -6,6 +6,9 @@
 # 5) Fit log mixed model: Response ~ Method * Illumination + (1 | AprilTag)
 # 6) Export PNG boxplots + PNG ANOVA tables (2 analyses) + TXT summary report
 
+# Example:
+# Use < write_csv(df_summary, "nameofthefile.csv") > at R console to visualize the repeatibility and accurracy data on csv file.
+
 # Packages
 pkgs <- c("readr", "dplyr", "lme4", "lmerTest", "car")
 to_install <- pkgs[!(pkgs %in% rownames(installed.packages()))]
@@ -291,3 +294,4 @@ writeLines(report_all, con = file.path(outdir, "relatorio_resumido.txt"))
 cat("\nOutputs saved in:", outdir, "\n")
 cat("PNG: 4 boxplots + 2 ANOVA tables\n")
 cat("TXT: relatorio_resumido.txt\n")
+
