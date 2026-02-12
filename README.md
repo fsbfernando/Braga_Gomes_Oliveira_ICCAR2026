@@ -1,6 +1,6 @@
 **PosesCalibration.py:** Positions for UR16e move to take the pictures for intrinsic and extrinsic camera calibration.
 
-**Rep_Acc_Per_Block.csv:** Repeatibility and accuracy per block of the experiment described on paper.
+**Tabela_45_Valores_ISO.csv:** Repeatibility and accuracy per block of the experiment described on paper.
 
 **Calibration.m/.asv:** Algorithm to execute the camera calibration with previous obtained data.
 
